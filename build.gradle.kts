@@ -7,9 +7,10 @@ plugins {
 group = "com.goals"
 version = "0.0.1-SNAPSHOT"
 
+// сменил на свою версию, чтобы работало у меня локально. Надо как-то сделать, чтобы работало везде...
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
+		languageVersion = JavaLanguageVersion.of(23)
 	}
 }
 
