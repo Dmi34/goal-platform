@@ -53,6 +53,19 @@ public class ProfileService {
         return mapToDTO(savedProfile);
     }
 
+    public ProfileDTO createProfile(Long userId) {
+    User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+    Profile profile = Profile.builder()
+            .user(user)
+            .build();
+            
+    Profile savedProfile = profileRepository.save(profile);
+    return mapToDTO(savedProfile);
+}
+
+
     private ProfileDTO mapToDTO(Profile profile) {
         UserSettings settings = profile.getUserSettings();
         UserSettingsDTO settingsDTO = null;

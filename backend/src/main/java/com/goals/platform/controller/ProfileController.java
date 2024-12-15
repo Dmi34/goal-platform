@@ -1,11 +1,13 @@
 package com.goals.platform.controller;
 
 import com.goals.platform.dto.ProfileDTO;
+import com.goals.platform.model.User;
 import com.goals.platform.service.ProfileService;
 import com.goals.platform.service.TelegramIntegrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/v1/profiles")
@@ -14,6 +16,22 @@ public class ProfileController {
 
     private final ProfileService profileService;
     private final TelegramIntegrationService telegramIntegrationService;
+
+    // Add this method to ProfileController
+    @GetMapping("/me")
+    public ResponseEntity<ProfileDTO> getCurrentUserProfile(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(profileService.getProfileByUserId(user.getId()));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<ProfileDTO> updateCurrentUserProfile(
+            Authentication authentication,
+            @RequestBody ProfileDTO profileDTO
+    ) {
+        User user = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(profileService.updateProfile(user.getId(), profileDTO));
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProfileDTO> getProfile(@PathVariable Long id) {

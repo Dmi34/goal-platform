@@ -20,7 +20,7 @@ public class Profile {
     private String address;
 
     @OneToOne
-    @JoinColumn(name = "id", nullable = false, unique = true)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
     @OneToOne(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)

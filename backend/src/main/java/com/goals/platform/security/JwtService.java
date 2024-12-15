@@ -1,5 +1,6 @@
 package com.goals.platform.security;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -16,12 +17,19 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
+
     private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
-    public String extractUsername(String token) {
+    
+    // backend/src/main/java/com/goals/platform/service/JwtService.java
+public String extractUsername(String token) {
+    try {
         return extractClaim(token, Claims::getSubject);
+    } catch (ExpiredJwtException e) {
+        // Even if token is expired, we can still get the claims
+        return e.getClaims().getSubject();
     }
-
+}
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
@@ -31,7 +39,10 @@ public class JwtService {
         return generateToken(new HashMap<>(), userDetails);
     }
 
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    public String generateToken(
+            Map<String, Object> extraClaims,
+            UserDetails userDetails
+    ) {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)

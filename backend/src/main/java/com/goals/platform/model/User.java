@@ -26,6 +26,7 @@ public class User implements UserDetails {
     private String lastname;
     private String email;
     private String password;
+    private String bio;
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -38,6 +39,12 @@ public class User implements UserDetails {
     public String getUsername() {
         return email;
     }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
 
     @Override
     public boolean isAccountNonExpired() {
