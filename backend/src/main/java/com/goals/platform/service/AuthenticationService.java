@@ -24,26 +24,26 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
 
     // backend/src/main/java/com/goals/platform/service/AuthenticationService.java
-public AuthenticationResponse refreshToken(String expiredToken) {
-    try {
-        // Even if token is expired, we can still extract the username
-        String userEmail = jwtService.extractUsername(expiredToken);
-        var user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        var savedUser = userRepository.save(user);
-        
-        profileService.createProfile(savedUser.getId());
-        
-        // Generate new token
-        var newToken = jwtService.generateToken(user);
-        
-        return AuthenticationResponse.builder()
-                .token(newToken)
-                .build();
-    } catch (Exception e) {
-        throw new RuntimeException("Failed to refresh token", e);
+    public AuthenticationResponse refreshToken(String expiredToken) {
+        try {
+            // Even if token is expired, we can still extract the username
+            String userEmail = jwtService.extractUsername(expiredToken);
+            var user = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            var savedUser = userRepository.save(user);
+
+            profileService.createProfile(savedUser.getId());
+
+            // Generate new token
+            var newToken = jwtService.generateToken(user);
+
+            return AuthenticationResponse.builder()
+                    .token(newToken)
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to refresh token", e);
+        }
     }
-}
 
     @Transactional
     public AuthenticationResponse register(RegisterRequest request) {
@@ -54,12 +54,12 @@ public AuthenticationResponse refreshToken(String expiredToken) {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
                 .build();
-        
+
         var savedUser = userRepository.save(user);
-        
+
         // Create profile for the new user
         profileService.createProfile(savedUser.getId());
-        
+
         var jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(jwtToken)

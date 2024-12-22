@@ -54,16 +54,16 @@ public class ProfileService {
     }
 
     public ProfileDTO createProfile(Long userId) {
-    User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
-    Profile profile = Profile.builder()
-            .user(user)
-            .build();
-            
-    Profile savedProfile = profileRepository.save(profile);
-    return mapToDTO(savedProfile);
-}
+        Profile profile = Profile.builder()
+                .user(user)
+                .build();
+
+        Profile savedProfile = profileRepository.save(profile);
+        return mapToDTO(savedProfile);
+    }
 
 
     private ProfileDTO mapToDTO(Profile profile) {
