@@ -15,6 +15,10 @@ export default function UserProfile() {
   const [profile, setProfile] = useState<ProfileData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false)
+  const [publicProfile, setPublicProfile] = useState(false)
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
 
   useEffect(() => {
     loadProfile()
@@ -24,6 +28,9 @@ export default function UserProfile() {
     try {
       const data = await profileApi.getCurrentProfile()
       setProfile(data)
+      setNotificationsEnabled(data.userSettings?.notificationsEnabled || false)
+      setPublicProfile(data.userSettings?.publicProfile || false)
+      setTwoFactorEnabled(data.userSettings?.twoFactorEnabled || false)
     } catch (err) {
       setError('Failed to load profile data')
       console.error(err)
@@ -33,23 +40,104 @@ export default function UserProfile() {
   }
 
   const handlePersonalInfoSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const fullName = formData.get('fullname') as string;
+    const [firstname, lastname] = fullName.split(' ');
+    console.log("Updating here: ", firstname + " " + lastname);
+    const updateData: any = {
+        user: {
+            firstname: firstname || '',
+            lastname: lastname || '',
+        },
+        bio: formData.get('bio') as string,
+        email: formData.get('email') as string,
+        avatar: undefined, // Initialize avatar as undefined
+        userSettings: {
+            notificationsEnabled,
+            publicProfile,
+            twoFactorEnabled,
+        }
+    };
+
+    // Handle avatar upload
+    if (avatarFile) {
+        const avatarData = new FormData();
+        avatarData.append('file', avatarFile);
+        try {
+            const avatarPath = await profileApi.uploadAvatar(avatarData);
+            updateData.avatar = avatarPath; // Store the path of the uploaded file
+        } catch (err) {
+            setError('Failed to upload avatar');
+            console.error(err);
+            return; // Exit if avatar upload fails
+        }
+    }
+
+    try {
+        const updatedProfile = await profileApi.updateProfile(updateData);
+        setProfile(updatedProfile);
+        setAvatarFile(null); // Reset the avatar file after upload
+    } catch (err) {
+        setError('Failed to update profile');
+        console.error(err);
+    }
+};
+
+const handleProfileSettingsSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setError(null);
+
+  const updateData = {
+      user: {
+          firstname: profile?.user?.firstname || '', // Ensure firstname is included
+          lastname: profile?.user?.lastname || '',   // Ensure lastname is included
+      },
+      userSettings: {
+          notificationsEnabled,
+          publicProfile,
+          twoFactorEnabled,
+      }
+  };
+
+  try {
+      const updatedProfile = await profileApi.updateProfile(updateData);
+      setProfile(updatedProfile);
+  } catch (err) {
+      setError('Failed to update profile settings');
+      console.error(err);
+  }
+};
+
+  const handleChangePassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
 
     const formData = new FormData(e.currentTarget)
-    const updateData = {
-      bio: formData.get('bio') as string,
-      phoneNumber: formData.get('phoneNumber') as string,
-      address: formData.get('address') as string,
-      email: profile?.email // Keep the existing email
+    const currentPassword = formData.get('current-password') as string
+    const newPassword = formData.get('new-password') as string
+    const confirmPassword = formData.get('confirm-password') as string
+
+    if (newPassword !== confirmPassword) {
+      setError('New passwords do not match')
+      return
     }
 
     try {
-      const updatedProfile = await profileApi.updateProfile(updateData)
-      setProfile(updatedProfile)
+      await profileApi.changePassword({ currentPassword, newPassword }) // Ensure this function is defined in the API
+      alert('Password changed successfully')
     } catch (err) {
-      setError('Failed to update profile')
+      setError('Failed to change password')
       console.error(err)
+    }
+  }
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setAvatarFile(file)
     }
   }
 
@@ -74,35 +162,59 @@ export default function UserProfile() {
                 <CardTitle className="text-2xl font-semibold text-amber-400">Personal Information</CardTitle>
               </CardHeader>
               <CardContent>
-                <form className="space-y-4">
+                <form onSubmit={handlePersonalInfoSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-sm font-medium text-slate-300">Full Name</Label>
-                    <Input id="name" placeholder="John Doe" className="bg-neutral-700 border-neutral-600 text-slate-100" />
+                    <Input 
+                      id="name" 
+                      name="fullname" 
+                      placeholder="John Doe" 
+                      className="bg-neutral-700 border-neutral-600 text-slate-100" 
+                      defaultValue={profile?.firstname && profile?.lastname ? `${profile.firstname} ${profile.lastname}` : "John Doe"} // Show "John Doe" if not specified
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="avatar" className="text-sm font-medium text-slate-300">Profile Picture</Label>
                     <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
                       <div className="h-20 w-20 rounded-full bg-neutral-700 flex items-center justify-center overflow-hidden">
-                        {/* Replace with actual user avatar if available */}
-                        <span className="text-4xl text-slate-400">JD</span>
+                        {avatarFile ? (
+                          <img src={URL.createObjectURL(avatarFile)} alt="Profile" className="h-full w-full object-cover" />
+                        ) : profile?.avatar ? (
+                          <img src={profile.avatar} alt="Profile" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-4xl text-slate-400">JD</span>
+                        )}
                       </div>
                       <div className="flex-1 w-full">
                         <label htmlFor="avatar-upload" className="cursor-pointer bg-orange-600 text-white hover:bg-orange-700 px-4 py-2 rounded-md inline-block">
                           Choose File
                         </label>
-                        <input id="avatar-upload" type="file" accept="image/*" className="hidden" />
+                        <input id="avatar-upload" name="avatar" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                       </div>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm font-medium text-slate-300">Email</Label>
-                    <Input id="email" type="email" placeholder="john@example.com" className="bg-neutral-700 border-neutral-600 text-slate-100" />
+                    <Input 
+                      id="email" 
+                      name="email" 
+                      type="email" 
+                      placeholder="john@example.com" 
+                      className="bg-neutral-700 border-neutral-600 text-slate-100" 
+                      defaultValue={profile?.email} // Set default value
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="bio" className="text-sm font-medium text-slate-300">Bio</Label>
-                    <textarea id="bio" placeholder="Tell us about yourself" className="w-full h-32 bg-neutral-700 border-neutral-600 text-slate-100 rounded-md p-2" />
+                    <textarea 
+                      id="bio" 
+                      name="bio" 
+                      placeholder="Tell us about yourself" 
+                      className="w-full h-32 bg-neutral-700 border-neutral-600 text-slate-100 rounded-md p-2" 
+                      defaultValue={profile?.bio} // Set default value
+                    />
                   </div>
-                  <Button className="bg-red-600 hover:bg-red-700">Save Changes</Button>
+                  <Button type="submit" className="bg-red-600 hover:bg-red-700">Save Changes</Button>
                 </form>
               </CardContent>
             </Card>
@@ -113,20 +225,32 @@ export default function UserProfile() {
                 <CardTitle className="text-2xl font-semibold text-amber-400">Profile Settings</CardTitle>
               </CardHeader>
               <CardContent>
-                <form className="space-y-4">
+                <form onSubmit={handleProfileSettingsSubmit} className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="notifications" className="text-sm font-medium text-slate-300">Email Notifications</Label>
-                    <Switch className="bg-neutral-600 data-[state=checked]:bg-red-500" />
+                    <Switch 
+                      checked={notificationsEnabled} 
+                      onCheckedChange={setNotificationsEnabled} 
+                      className="bg-neutral-600 data-[state=checked]:bg-red-500" 
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label htmlFor="public-profile" className="text-sm font-medium text-slate-300">Public Profile</Label>
-                    <Switch className="bg-neutral-600 data-[state=checked]:bg-red-500" />
+                    <Switch 
+                      checked={publicProfile} 
+                      onCheckedChange={setPublicProfile} 
+                      className="bg-neutral-600 data-[state=checked]:bg-red-500" 
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label htmlFor="two-factor" className="text-sm font-medium text-slate-300">Two-Factor Authentication</Label>
-                    <Switch className="bg-neutral-600 data-[state=checked]:bg-red-500" />
+                    <Switch 
+                      checked={twoFactorEnabled} 
+                      onCheckedChange={setTwoFactorEnabled} 
+                      className="bg-neutral-600 data-[state=checked]:bg-red-500" 
+                    />
                   </div>
-                  <Button className="bg-red-600 hover:bg-red-700">Save Settings</Button>
+                  <Button type="submit" className="bg-red-600 hover:bg-red-700">Save Settings</Button>
                 </form>
               </CardContent>
             </Card>
@@ -137,20 +261,20 @@ export default function UserProfile() {
                 <CardTitle className="text-2xl font-semibold text-amber-400">Change Password</CardTitle>
               </CardHeader>
               <CardContent>
-                <form className="space-y-4">
+                <form onSubmit={handleChangePassword} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="current-password" className="text-sm font-medium text-slate-300">Current Password</Label>
-                    <Input id="current-password" type="password" className="bg-neutral-700 border-neutral-600 text-slate-100" />
+                    <Input id="current-password" name="current-password" type="password" className="bg-neutral-700 border-neutral-600 text-slate-100" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="new-password" className="text-sm font-medium text-slate-300">New Password</Label>
-                    <Input id="new-password" type="password" className="bg-neutral-700 border-neutral-600 text-slate-100" />
+                    <Input id="new-password" name="new-password" type="password" className="bg-neutral-700 border-neutral-600 text-slate-100" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password" className="text-sm font-medium text-slate-300">Confirm New Password</Label>
-                    <Input id="confirm-password" type="password" className="bg-neutral-700 border-neutral-600 text-slate-100" />
+                    <Input id="confirm-password" name="confirm-password" type="password" className="bg-neutral-700 border-neutral-600 text-slate-100" />
                   </div>
-                  <Button className="bg-red-600 hover:bg-red-700">Change Password</Button>
+                  <Button type="submit" className="bg-red-600 hover:bg-red-700">Change Password</Button>
                 </form>
               </CardContent>
             </Card>
@@ -184,4 +308,3 @@ export default function UserProfile() {
     </div>
   )
 }
-

@@ -9,6 +9,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 @RestController
 @RequestMapping("/api/v1/profiles")
 @RequiredArgsConstructor
@@ -16,8 +24,33 @@ public class ProfileController {
 
     private final ProfileService profileService;
     private final TelegramIntegrationService telegramIntegrationService;
+private final String UPLOAD_DIR = "uploads/avatars/";
 
-    // Add this method to ProfileController
+    @PostMapping("/upload-avatar")
+    public ResponseEntity<String> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("File is empty");
+        }
+
+        try {
+            // Create the directory if it doesn't exist
+            File directory = new File(UPLOAD_DIR);
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            // Save the file to the specified directory
+            Path path = Paths.get(UPLOAD_DIR + file.getOriginalFilename());
+            Files.write(path, file.getBytes());
+
+            // Return the file path or URL
+            return ResponseEntity.ok(path.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Failed to upload file");
+        }
+    }
+
     @GetMapping("/me")
     public ResponseEntity<ProfileDTO> getCurrentUserProfile(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
@@ -52,12 +85,6 @@ public class ProfileController {
             @RequestParam String telegramChatId
     ) {
         String response = telegramIntegrationService.linkTelegramAccount(id, telegramChatId);
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/{id}/telegram/unlink")
-    public ResponseEntity<String> unlinkTelegramAccount(@PathVariable Long id) {
-        String response = telegramIntegrationService.unlinkTelegramAccount(id);
         return ResponseEntity.ok(response);
     }
 }

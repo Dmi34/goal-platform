@@ -18,6 +18,7 @@ public class Profile {
     private String bio;
     private String phoneNumber;
     private String address;
+    
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)

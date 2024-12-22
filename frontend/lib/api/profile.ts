@@ -7,8 +7,17 @@ export interface ProfileData {
     phoneNumber: string;
     address: string;
     email: string;
+    firstname: string;
+    lastname: string;
+    avatar?: string;
+    user: {
+        firstname: string;
+        lastname: string;
+    };
     userSettings: {
-        // add any settings fields if needed
+        notificationsEnabled: boolean;
+        publicProfile: boolean;
+        twoFactorEnabled: boolean;
     };
 }
 
@@ -21,6 +30,17 @@ export const profileApi = {
 
     updateProfile: async (data: Partial<ProfileData>): Promise<ProfileData> => {
         const response = await axiosInstance.put('/profiles/me', data);
+        console.log("Returned data: ", response.data);
         return response.data;
-    }
+    },
+
+    changePassword: async (data: { currentPassword: string; newPassword: string }) => {
+        const response = await axiosInstance.put('/profiles/change-password', data);
+        return response.data;
+    },
+
+    uploadAvatar: async (data: FormData): Promise<string> => {
+        const response = await axiosInstance.post('/profiles/upload-avatar', data);
+        return response.data; // Return the file path or URL
+    },
 };

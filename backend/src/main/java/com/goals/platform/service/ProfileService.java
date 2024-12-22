@@ -36,7 +36,8 @@ public class ProfileService {
         profile.setBio(profileDTO.getBio());
         profile.setPhoneNumber(profileDTO.getPhoneNumber());
         profile.setAddress(profileDTO.getAddress());
-
+        user.setFirstname(profileDTO.getUser().getFirstname());
+        user.setLastname(profileDTO.getUser().getLastname());
         // Update or create user settings
         UserSettings settings = profile.getUserSettings();
         if (settings == null) {
@@ -44,7 +45,7 @@ public class ProfileService {
             settings.setProfile(profile);
         }
         settings.setNotificationsEnabled(profileDTO.getUserSettings().isNotificationsEnabled());
-        settings.setThemePreference(profileDTO.getUserSettings().getThemePreference());
+        settings.setPublicProfile(profileDTO.getUserSettings().getPublicProfile());
         settings.setTwoFactorEnabled(profileDTO.getUserSettings().isTwoFactorEnabled());
 
         profile.setUserSettings(settings);
@@ -72,7 +73,7 @@ public class ProfileService {
         if (settings != null) {
             settingsDTO = UserSettingsDTO.builder()
                     .notificationsEnabled(settings.isNotificationsEnabled())
-                    .themePreference(settings.getThemePreference())
+                    .publicProfile(settings.getPublicProfile())
                     .twoFactorEnabled(settings.isTwoFactorEnabled())
                     .build();
         }

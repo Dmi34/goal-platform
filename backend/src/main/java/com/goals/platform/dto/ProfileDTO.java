@@ -12,6 +12,13 @@ public class ProfileDTO {
     private String phoneNumber;
     private String address;
     private String email;
+    private UserDTO user;
+    public UserDTO getUser() {
+           return user;
+       }
 
+       public void setUser(UserDTO user) {
+           this.user = user;
+       }
     private UserSettingsDTO userSettings;
 }
