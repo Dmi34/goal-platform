@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -37,6 +38,8 @@ public class GoalDto {
     private Boolean isCompleted;
 
     private Long userId;
+
+    private List<Long> categoriesId;
 
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
