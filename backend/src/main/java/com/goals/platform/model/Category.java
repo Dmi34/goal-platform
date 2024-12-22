@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -23,5 +24,5 @@ public class Category {
     private String description;
 
     @ManyToMany
-    private List<Goal> goal;
+    private List<Goal> goals = new ArrayList<>();
 }

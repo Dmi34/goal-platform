@@ -1,7 +1,6 @@
 package com.goals.platform.service;
 
 import com.goals.platform.dto.GoalDto;
-import com.goals.platform.model.Category;
 import com.goals.platform.model.Goal;
 import com.goals.platform.model.User;
 import com.goals.platform.repository.CategoryRepository;
@@ -11,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -55,7 +53,7 @@ public class GoalService {
         userRepository.save(user);
 
         for (var category : categories) {
-            category.getGoal().add(goal);
+            category.getGoals().add(goal);
             categoryRepository.save(category);
         }
 
@@ -81,7 +79,7 @@ public class GoalService {
         userRepository.save(user);
 
         goal.getCategories().forEach(category -> {
-            category.getGoal().remove(goal);
+            category.getGoals().remove(goal);
             categoryRepository.save(category);
         });
 
