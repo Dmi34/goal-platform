@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -18,9 +20,16 @@ public class Goal {
     @Id
     @GeneratedValue
     private Long id;
+
     private String title;
     private String description;
     private BigDecimal price;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+    private Boolean isCompleted;
+
+    @ManyToMany
+    private List<Category> categories;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
