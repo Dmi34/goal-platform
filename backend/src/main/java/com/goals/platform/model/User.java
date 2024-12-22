@@ -22,6 +22,7 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue
     private Long id;
+
     private String firstname;
     private String lastname;
     private String email;
@@ -29,6 +30,9 @@ public class User implements UserDetails {
     private String bio;
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @OneToMany(mappedBy = "user")
+    private List<Goal> goals;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -3,6 +3,8 @@ package com.goals.platform.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "profiles")
 @Data
