@@ -28,6 +28,12 @@ public class GoalController {
         return ResponseEntity.ok(goalService.createGoal(goalDto, guideFile, coverFile));
     }
 
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Goal> updateGoalStatus(@PathVariable Long id, @RequestBody String status) {
+        Goal updatedGoal = goalService.updateGoalStatus(id, status);
+        return ResponseEntity.ok(updatedGoal);
+    }
+
     @GetMapping
     public ResponseEntity<List<Goal>> getAllGoals() {
         return ResponseEntity.ok(goalService.getAllGoals());

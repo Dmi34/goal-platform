@@ -65,6 +65,14 @@ public class GoalService {
 
         user.getGoals().add(goal.getId());
         userRepository.save(user);
+        return 
+        
+        goalRepository.save(goal);
+    }
+
+    public Goal updateGoalStatus(Long id, String status) {
+        Goal goal = getGoalById(id);
+        goal.setStatus(status);
         return goalRepository.save(goal);
     }
 
