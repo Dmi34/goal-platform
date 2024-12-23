@@ -1,15 +1,47 @@
 'use client'
 
-import { Navbar } from "../components/navbar"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react";
+import { Navbar } from "../components/navbar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { goalApi } from "@/lib/api/goal"; // Import the new goal API module
+import { useRouter } from "next/navigation";
 
 export default function SellGoal() {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState(0);
+  const [guideFile, setGuideFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [activeTab, setActiveTab] = useState('edit'); // State to manage active tab
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('goal', JSON.stringify({ 
+      title, 
+      description, 
+      price, 
+      userId: 1, // Assuming userId is 1 for demo
+      status: 'Pending'
+    }));
+    if (guideFile) formData.append('guide', guideFile);
+    if (coverFile) formData.append('cover', coverFile);
+
+    try {
+      await goalApi.createGoal(formData); // Use the new goal API module
+      router.push('/goals'); // Redirect to goals page after successful creation
+    } catch (error) {
+      console.error('Failed to create goal:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-slate-100">
       <Navbar />
@@ -20,14 +52,14 @@ export default function SellGoal() {
             <CardTitle className="text-2xl font-semibold text-amber-400">Goal Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <form className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="title" className="text-sm font-medium text-slate-300">Title</Label>
-                <Input id="title" className="bg-neutral-700 border-neutral-600 text-slate-100" placeholder="Enter goal title" />
+                <Input id="title" className="bg-neutral-700 border-neutral-600 text-slate-100" placeholder="Enter goal title" value={title} onChange={(e) => setTitle(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description" className="text-sm font-medium text-slate-300">Description</Label>
-                <Textarea id="description" className="bg-neutral-700 border-neutral-600 text-slate-100" placeholder="Describe your goal" />
+                <Textarea id="description" className="bg-neutral-700 border-neutral-600 text-slate-100" placeholder="Describe your goal" value={description} onChange={(e) => setDescription(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category" className="text-sm font-medium text-slate-300">Category</Label>
@@ -47,7 +79,7 @@ export default function SellGoal() {
               <div className="space-y-2">
                 <Label htmlFor="guide" className="text-sm font-medium text-slate-300">Guide Upload</Label>
                 <div className="flex items-center space-x-2">
-                  <Input id="guide" type="file" className="hidden" />
+                  <Input id="guide" type="file" className="hidden" onChange={(e) => setGuideFile(e.target.files[0])} />
                   <Button
                     onClick={() => document.getElementById('guide')?.click()}
                     variant="outline"
@@ -55,17 +87,17 @@ export default function SellGoal() {
                   >
                     Choose File
                   </Button>
-                  <span className="text-sm text-slate-400">No file chosen</span>
+                  <span className="text-sm text-slate-400">{guideFile ? guideFile.name : 'No file chosen'}</span>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="price" className="text-sm font-medium text-slate-300">Price</Label>
-                <Input id="price" type="number" className="bg-neutral-700 border-neutral-600 text-slate-100" placeholder="Set your price" />
+                <Input id="price" type="number" className="bg-neutral-700 border-neutral-600 text-slate-100" placeholder="Set your price" value={price} onChange={(e) => setPrice(Number(e.target.value))} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cover" className="text-sm font-medium text-slate-300">Cover Image</Label>
                 <div className="flex items-center space-x-2">
-                  <Input id="cover" type="file" accept="image/*" className="hidden" />
+                  <Input id="cover" type="file" accept="image/*" className="hidden" onChange={(e) => setCoverFile(e.target.files[0])} />
                   <Button
                     onClick={() => document.getElementById('cover')?.click()}
                     variant="outline"
@@ -73,7 +105,7 @@ export default function SellGoal() {
                   >
                     Choose Image
                   </Button>
-                  <span className="text-sm text-slate-400">No image chosen</span>
+                  <span className="text-sm text-slate-400">{coverFile ? coverFile.name : 'No image chosen'}</span>
                 </div>
               </div>
             </form>
@@ -85,7 +117,7 @@ export default function SellGoal() {
             >
               Save Draft
             </Button>
-            <Button className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white">
+            <Button type="submit" onClick={handleSubmit} className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white">
               Publish Goal
             </Button>
           </CardFooter>
@@ -104,16 +136,15 @@ export default function SellGoal() {
                 <CardTitle className="text-xl font-semibold text-orange-400">Goal Preview</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <h2 className="text-2xl font-bold text-slate-100">Your Goal Title</h2>
+                <h2 className="text-2xl font-bold text-slate-100">{title || 'Your Goal Title'}</h2>
                 <p className="text-sm text-slate-400">Category: Your Selected Category</p>
-                <p className="text-slate-300">Your goal description will appear here...</p>
-                <p className="text-lg font-bold text-red-400">Price: $XX.XX</p>
+                <p className="text-slate-300">{description || 'Your goal description will appear here...'}</p>
+                <p className="text-lg font-bold text-red-400">Price: ${price || 0}</p>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </main>
     </div>
-  )
+  );
 }
-

@@ -3,13 +3,23 @@ package com.goals.platform.service;
 import com.goals.platform.dto.GoalDto;
 import com.goals.platform.model.Goal;
 import com.goals.platform.model.User;
+import com.goals.platform.model.Profile;
 import com.goals.platform.repository.CategoryRepository;
 import com.goals.platform.repository.GoalRepository;
 import com.goals.platform.repository.UserRepository;
+import com.goals.platform.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
+import org.springframework.web.multipart.MultipartFile; // For MultipartFile
+import java.io.IOException;
 import java.util.List;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +27,61 @@ public class GoalService {
     private final GoalRepository goalRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final ProfileRepository profileRepository;
+
+    private final String UPLOAD_DIR = "uploads/goals/";
+
+    public Goal createGoal(GoalDto goalDto, MultipartFile guideFile, MultipartFile coverFile) throws IOException {
+        User user = userRepository
+                .findById(goalDto.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+
+        if (!profileRepository.existsByUserId(user.getId())) {
+            Profile profile = new Profile();
+            profile.setUser(user);
+            // Set other profile fields as necessary
+            profileRepository.save(profile);
+        }
+
+        // Save guide file
+        String guidePath = saveFile(guideFile);
+        // Save cover file
+        String coverPath = saveFile(coverFile);
+
+        Goal goal = Goal.builder()
+                .title(goalDto.getTitle())
+                .description(goalDto.getDescription())
+                .price(goalDto.getPrice())
+                .startDate(goalDto.getStartDate())
+                .endDate(goalDto.getEndDate())
+                .isCompleted(false) // Default to false
+                .user(user)
+                .guidePath(guidePath) // Assuming you have a field for guide path
+                .coverPath(coverPath) // Assuming you have a field for cover path
+                .status("Pending") // Set initial status to Pending
+                .build();
+
+        return goalRepository.save(goal);
+    }
+
+    private String saveFile(MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            throw new RuntimeException("File is empty");
+        }
+
+        // Create the directory if it doesn't exist
+        File directory = new File(UPLOAD_DIR);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        // Save the file to the specified directory
+        Path path = Paths.get(UPLOAD_DIR + file.getOriginalFilename());
+        Files.write(path, file.getBytes());
+
+        return path.toString(); // Return the file path
+    }
 
     public List<Goal> getAllGoals() {
         return goalRepository.findAll();

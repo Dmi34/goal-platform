@@ -34,4 +34,8 @@ public class Goal {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    private String guidePath; // Path to the guide file
+    private String coverPath; // Path to the cover image
+    private String status; //pending | approved | rejected
 }

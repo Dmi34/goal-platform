@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/test/**").permitAll() // Add this line to permit test endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/profiles/**").permitAll()
+                        .requestMatchers("/api/v1/goals").permitAll()
                         .requestMatchers("/api/v1/**").permitAll()
                         .anyRequest().authenticated()
                 )

@@ -6,14 +6,26 @@ import com.goals.platform.service.GoalService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile; // For MultipartFile
+import java.io.IOException;
 import java.util.List;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/api/v1/goals")
 @RequiredArgsConstructor
 public class GoalController {
     private final GoalService goalService;
+    private final ObjectMapper objectMapper;
+
+    @PostMapping
+    public ResponseEntity<Goal> createGoal(@RequestParam("goal") String goalJson,
+                                            @RequestParam("guide") MultipartFile guideFile,
+                                            @RequestParam("cover") MultipartFile coverFile) throws IOException {
+        GoalDto goalDto = objectMapper.readValue(goalJson, GoalDto.class); // Convert JSON string to GoalDto
+        return ResponseEntity.ok(goalService.createGoal(goalDto, guideFile, coverFile));
+    }
 
     @GetMapping
     public ResponseEntity<List<Goal>> getAllGoals() {
@@ -25,10 +37,6 @@ public class GoalController {
         return ResponseEntity.ok(goalService.getGoalById(id));
     }
 
-    @PostMapping
-    public ResponseEntity<Goal> createGoal(@RequestBody GoalDto goalDto) {
-        return ResponseEntity.ok(goalService.createGoal(goalDto));
-    }
 
     @PutMapping("/{id}")
     public ResponseEntity<Goal> updateGoal(@PathVariable Long id, @RequestBody GoalDto goalDto) {

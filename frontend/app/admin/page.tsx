@@ -1,72 +1,75 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Navbar } from "../components/navbar"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Switch } from "@/components/ui/switch"
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import React, { useState, useEffect } from 'react';
+import { Navbar } from "../components/navbar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { goalApi } from "@/lib/api/goal"; // Ensure this import is correct
 
 const platformMetrics = [
   { name: 'Users', value: 5000 },
   { name: 'Goals', value: 1200 },
   { name: 'Sales', value: 8500 },
   { name: 'Revenue', value: 50000 },
-]
-
-const goalsForModeration = [
-  { id: 1, title: 'Start a Tech Company', author: 'John Doe', status: 'Pending', description: 'This is a description of the goal.' },
-  { id: 2, title: 'Learn Machine Learning', author: 'Jane Smith', status: 'Approved', description: 'This is a description of the goal.' },
-  { id: 3, title: 'Write a Novel', author: 'Alice Johnson', status: 'Rejected', description: 'This is a description of the goal.' },
-]
+];
 
 const users = [
   { id: 1, name: 'John Doe', email: 'john@example.com', role: 'User' },
   { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Admin' },
   { id: 3, name: 'Alice Johnson', email: 'alice@example.com', role: 'User' },
-]
+];
 
 const categories = [
   { id: 1, name: 'Technology', goalCount: 150 },
   { id: 2, name: 'Business', goalCount: 200 },
   { id: 3, name: 'Health & Fitness', goalCount: 100 },
-]
+];
 
 export default function AdminPanel() {
-  const [maintenanceMode, setMaintenanceMode] = useState(false)
-  const [expandedGoal, setExpandedGoal] = useState(null)
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [expandedGoal, setExpandedGoal] = useState(null);
+  const [goalsForModeration, setGoalsForModeration] = useState([]);
 
-  const handleApprove = (goalId) => {
-    console.log('Approve goal:', goalId)
-  }
+  useEffect(() => {
+    const fetchGoalsForModeration = async () => {
+      try {
+        const fetchedGoals = await goalApi.getAllGoals(); // Fetch all goals
+        setGoalsForModeration(fetchedGoals.filter(goal => goal.status === 'Pending')); // Filter for pending goals
+      } catch (error) {
+        console.error("Error fetching goals for moderation:", error);
+      }
+    };
+    fetchGoalsForModeration();
+  }, []);
 
-  const handleReject = (goalId) => {
-    console.log('Reject goal:', goalId)
-  }
+  const handleApprove = async (goalId) => {
+    try {
+      await goalApi.updateGoalStatus(goalId, 'Approved'); // Update status in the database
+      setGoalsForModeration(prevGoals => prevGoals.filter(goal => goal.id !== goalId)); // Remove approved goal from the list
+      console.log('Approved goal:', goalId);
+    } catch (error) {
+      console.error('Failed to approve goal:', error);
+    }
+  };
 
-  const handleEditUser = (userId) => {
-    console.log('Edit user:', userId)
-  }
-
-  const handleBlockUser = (userId) => {
-    console.log('Block user:', userId)
-  }
-
-  const handleEditCategory = (categoryId) => {
-    console.log('Edit category:', categoryId)
-  }
-
-  const handleDeleteCategory = (categoryId) => {
-    console.log('Delete category:', categoryId)
-  }
+  const handleReject = async (goalId) => {
+    try {
+      await goalApi.updateGoalStatus(goalId, 'Rejected'); // Update status in the database
+      setGoalsForModeration(prevGoals => prevGoals.filter(goal => goal.id !== goalId)); // Remove rejected goal from the list
+      console.log('Rejected goal:', goalId);
+    } catch (error) {
+      console.error('Failed to reject goal:', error);
+    }
+  };
 
   const toggleGoalDescription = (goalId) => {
-    setExpandedGoal(expandedGoal === goalId ? null : goalId)
-  }
+    setExpandedGoal(expandedGoal === goalId ? null : goalId);
+  };
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] text-slate-100">
@@ -193,7 +196,7 @@ export default function AdminPanel() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="mr-2 bg-orange-600 text-white border-orange-600 hover:bg-orange-700"
+                            className="mr-2 bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
                             onClick={() => handleEditUser(user.id)}
                           >
                             Edit
@@ -201,7 +204,7 @@ export default function AdminPanel() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="mr-2 bg-red-600 text-white border-red-600 hover:bg-red-700"
+                            className="bg-red-600 text-white border-red-600 hover:bg-red-700"
                             onClick={() => handleBlockUser(user.id)}
                           >
                             Block
@@ -297,6 +300,5 @@ export default function AdminPanel() {
         </Tabs>
       </main>
     </div>
-  )
+  );
 }
-
