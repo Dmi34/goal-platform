@@ -36,14 +36,15 @@ public class GoalService {
                 .findById(goalDto.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-
+        
         if (!profileRepository.existsByUserId(user.getId())) {
             Profile profile = new Profile();
             profile.setUser(user);
             // Set other profile fields as necessary
             profileRepository.save(profile);
         }
-
+        
+        
         // Save guide file
         String guidePath = saveFile(guideFile);
         // Save cover file
@@ -62,6 +63,8 @@ public class GoalService {
                 .status("Pending") // Set initial status to Pending
                 .build();
 
+        user.getGoals().add(goal.getId());
+        userRepository.save(user);
         return goalRepository.save(goal);
     }
 
@@ -91,7 +94,7 @@ public class GoalService {
         return goalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Goal not found"));
     }
-
+    /*
     public Goal createGoal(GoalDto goalDto) {
         User user = userRepository
                 .findById(goalDto.getUserId())
@@ -116,14 +119,13 @@ public class GoalService {
 
         user.getGoals().add(goal);
         userRepository.save(user);
-
         for (var category : categories) {
             category.getGoals().add(goal);
             categoryRepository.save(category);
         }
 
         return goalRepository.save(goal);
-    }
+    } */
 
     public Goal updateGoal(Long id, GoalDto goalDto) {
         Goal existingGoal = getGoalById(id);

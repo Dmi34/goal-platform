@@ -39,6 +39,8 @@ export default function AdminPanel() {
     const fetchGoalsForModeration = async () => {
       try {
         const fetchedGoals = await goalApi.getAllGoals(); // Fetch all goals
+
+  console.log("goals for mod: ", fetchedGoals);
         setGoalsForModeration(fetchedGoals.filter(goal => goal.status === 'Pending')); // Filter for pending goals
       } catch (error) {
         console.error("Error fetching goals for moderation:", error);
@@ -46,7 +48,6 @@ export default function AdminPanel() {
     };
     fetchGoalsForModeration();
   }, []);
-
   const handleApprove = async (goalId) => {
     try {
       await goalApi.updateGoalStatus(goalId, 'Approved'); // Update status in the database

@@ -18,7 +18,6 @@ export default function SellGoal() {
   const [price, setPrice] = useState(0);
   const [guideFile, setGuideFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [activeTab, setActiveTab] = useState('edit'); // State to manage active tab
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -40,6 +39,10 @@ export default function SellGoal() {
     } catch (error) {
       console.error('Failed to create goal:', error);
     }
+  };
+
+  const handleFileClick = (id: string) => {
+    document.getElementById(id)?.click();
   };
 
   return (
@@ -81,7 +84,7 @@ export default function SellGoal() {
                 <div className="flex items-center space-x-2">
                   <Input id="guide" type="file" className="hidden" onChange={(e) => setGuideFile(e.target.files[0])} />
                   <Button
-                    onClick={() => document.getElementById('guide')?.click()}
+                    onClick={(e) => { e.preventDefault(); handleFileClick('guide'); }}
                     variant="outline"
                     className="bg-neutral-700 text-slate-200 border-neutral-600 hover:bg-white hover:text-orange-500 transition-colors"
                   >
@@ -99,7 +102,7 @@ export default function SellGoal() {
                 <div className="flex items-center space-x-2">
                   <Input id="cover" type="file" accept="image/*" className="hidden" onChange={(e) => setCoverFile(e.target.files[0])} />
                   <Button
-                    onClick={() => document.getElementById('cover')?.click()}
+                    onClick={(e) => { e.preventDefault(); handleFileClick('cover'); }}
                     variant="outline"
                     className="bg-neutral-700 text-slate-200 border-neutral-600 hover:bg-white hover:text-orange-500 transition-colors"
                   >

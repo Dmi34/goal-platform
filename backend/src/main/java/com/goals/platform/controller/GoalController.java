@@ -24,6 +24,7 @@ public class GoalController {
                                             @RequestParam("guide") MultipartFile guideFile,
                                             @RequestParam("cover") MultipartFile coverFile) throws IOException {
         GoalDto goalDto = objectMapper.readValue(goalJson, GoalDto.class); // Convert JSON string to GoalDto
+        System.out.println("Creating here");
         return ResponseEntity.ok(goalService.createGoal(goalDto, guideFile, coverFile));
     }
 
